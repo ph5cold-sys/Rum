@@ -1,0 +1,48 @@
+name: Build Whisky macOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-13
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Show Xcode Version
+        run: xcodebuild -version
+
+      - name: Show Project Information
+        run: |
+          xcodebuild -list -project Whisky.xcodeproj
+
+      - name: Build App
+        run: |
+          xcodebuild \
+            -project Whisky.xcodeproj \
+            -scheme Whisky \
+            -configuration Release \
+            -destination "generic/platform=macOS" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            clean build
+
+      - name: Locate App
+        run: |
+          find build -name "*.app"
+
+      - name: Upload App
+        uses: actions/upload-artifact@v4
+        with:
+          name: Whisky-macOS
+          path: build/**/*.app
+          if-no-files-found: error
